@@ -121,6 +121,7 @@ public class SecurityConfig {
                                 "/user/{userId}/habit/assign",
                                 "/token",
                                 "/socket/**",
+                                "/user/findAll",
                                 "/user/findAllByEmailNotification",
                                 "/user/checkByUuid",
                                 "/user/get-user-rating")
