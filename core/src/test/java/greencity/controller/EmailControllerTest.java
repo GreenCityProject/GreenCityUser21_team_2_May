@@ -3,9 +3,12 @@ package greencity.controller;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import greencity.constant.ErrorMessage;
 import greencity.dto.econews.EcoNewsForSendEmailDto;
 import greencity.dto.notification.NotificationDto;
 import greencity.dto.violation.UserViolationMailDto;
+import greencity.exception.exceptions.NotFoundException;
+import greencity.exception.handler.CustomExceptionHandler;
 import greencity.message.SendChangePlaceStatusEmailMessage;
 import greencity.message.SendHabitNotification;
 import greencity.message.SendReportEmailMessage;
@@ -17,12 +20,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.Mockito.verify;
+import java.util.HashMap;
+
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,6 +41,9 @@ class EmailControllerTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private DefaultErrorAttributes errorAttributesMock;
+
     @InjectMocks
     private EmailController emailController;
 
@@ -42,6 +52,7 @@ class EmailControllerTest {
         this.mockMvc = MockMvcBuilders
             .standaloneSetup(emailController)
             .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setControllerAdvice(new CustomExceptionHandler(errorAttributesMock))
             .build();
     }
 
@@ -113,7 +124,7 @@ class EmailControllerTest {
     @Test
     void sendHabitNotification() throws Exception {
         String content = "{" +
-            "\"email\":\"string\"," +
+            "\"email\":\"test.email@gmail.com\"," +
             "\"name\":\"string\"" +
             "}";
 
@@ -123,6 +134,35 @@ class EmailControllerTest {
             new ObjectMapper().readValue(content, SendHabitNotification.class);
 
         verify(emailService).sendHabitNotification(notification.getName(), notification.getEmail());
+    }
+
+    @Test
+    void sendHabitNotification_ExpectedNotFound() throws Exception {
+        String content = "{" +
+                "\"email\":\"1111@gmail.com\"," +
+                "\"name\":\"String\"" +
+                "}";
+
+        String email = "1111@gmail.com";
+        String name = "String";
+
+
+        doThrow(new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + email)).when(emailService).sendHabitNotification(name, email);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("timestamp", "timestamp");
+        map.put("trace", "trace");
+        map.put("path", "path");
+        map.put("message", "message");
+        when(errorAttributesMock.getErrorAttributes(any(), any())).thenReturn(map);
+
+        sentPostRequest(content, "/sendHabitNotification")
+                .andExpect(status().isNotFound());
+    }
+
+    private ResultActions sentPostRequest(String content, String subLink) throws Exception {
+        return mockMvc.perform(post(LINK + subLink)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content));
     }
 
     private void mockPerform(String content, String subLink) throws Exception {
