@@ -175,4 +175,12 @@ public class UserControllerWithSecurityConfigTest {
                 .andExpect(status().isUnauthorized());
         verifyNoInteractions(userService);
     }
+
+    @Test
+    @WithMockUser(username = "testmail@mail.com", roles = "USER")
+    void findUserForManagementByPage_isForbidden() throws Exception {
+        mockMvc.perform(get(userLink + "/findUserForManagement"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(userService);
+    }
 }
