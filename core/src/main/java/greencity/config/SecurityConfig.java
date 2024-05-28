@@ -129,6 +129,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/ownSecurity/signUp",
                                 "/ownSecurity/signIn",
+                                "/user/filter",
                                 "/ownSecurity/updatePassword")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, USER_LINK,
@@ -202,7 +203,6 @@ public class SecurityConfig {
                                 "/ownSecurity/sign-up-employee")
                         .hasAnyRole(UBS_EMPLOYEE)
                         .requestMatchers(HttpMethod.POST,
-                                "/user/filter",
                                 "/ownSecurity/register")
                         .hasAnyRole(ADMIN)
                         .requestMatchers(HttpMethod.PATCH,
