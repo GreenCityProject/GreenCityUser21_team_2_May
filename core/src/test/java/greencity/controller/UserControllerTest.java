@@ -27,6 +27,7 @@ import greencity.exception.handler.CustomExceptionHandler;
 import greencity.repository.UserRepo;
 import greencity.service.UserService;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -121,6 +122,20 @@ class UserControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content("{}"))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateUserLastActivityTimeTest_isOk() throws Exception {
+        Principal principal = mock(Principal.class);
+        UserVO userVO = ModelUtils.TEST_USER_VO;
+
+        when(userService.findByEmail(principal.getName())).thenReturn(userVO);
+
+        LocalDateTime date = LocalDateTime.now();
+
+        mockMvc.perform(put(userLink + "/updateUserLastActivityTime/" + date)
+                        .principal(principal))
+                .andExpect(status().isOk());
     }
 
     @Test
