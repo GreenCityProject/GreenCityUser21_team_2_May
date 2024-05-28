@@ -175,4 +175,20 @@ public class UserControllerWithSecurityConfigTest {
                 .andExpect(status().isUnauthorized());
         verifyNoInteractions(userService);
     }
+
+    @Test
+    @WithMockUser(username = "User", roles = "USER")
+    void updateStatusTest_isForbidden() throws Exception {
+        String content = "{\n"
+                + "  \"id\": 0,\n"
+                + "  \"userStatus\": \"DEACTIVATED\"\n"
+                + "}";
+
+        mockMvc.perform(patch(userLink + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userService);
+    }
 }
