@@ -32,6 +32,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import static greencity.enums.UserStatus.DEACTIVATED;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 import static greencity.enums.Role.ROLE_ADMIN;
@@ -39,8 +40,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -182,5 +182,30 @@ public class UserControllerWithSecurityConfigTest {
         mockMvc.perform(get(userLink + "/findUserForManagement"))
                 .andExpect(status().isForbidden());
         verifyNoInteractions(userService);
+    }
+
+    @Test
+    @WithMockUser(username = "User", roles = "USER")
+    void updateStatusTest_isForbidden() throws Exception {
+        String content = "{\n"
+                + "  \"id\": 0,\n"
+                + "  \"userStatus\": \"DEACTIVATED\"\n"
+                + "}";
+
+        mockMvc.perform(patch(userLink + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userService);
+    }
+  
+    @Test
+    @WithMockUser(username = "Admin", roles = "ADMIN")
+    void updateUserLastActivityTimeTest_IsOk() throws Exception {
+        LocalDateTime date = LocalDateTime.now();
+
+        mockMvc.perform(put(userLink + "/updateUserLastActivityTime/" + date))
+                .andExpect(status().isOk());
     }
 }
