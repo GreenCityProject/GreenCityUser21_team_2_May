@@ -191,6 +191,17 @@ public class UserControllerWithSecurityConfigTest {
 
         verifyNoInteractions(userService);
     }
+
+    @Test
+    @WithMockUser(username = "Admin", roles = "ADMIN")
+    void updateStatusTest_isBadRequest() throws Exception {
+        mockMvc.perform(patch(userLink + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
   
     @Test
     @WithMockUser(username = "Admin", roles = "ADMIN")
