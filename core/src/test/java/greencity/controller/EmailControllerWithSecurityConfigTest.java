@@ -116,4 +116,17 @@ class EmailControllerWithSecurityConfigTest {
                 .content(content));
     }
 
+    @Test
+    @WithAnonymousUser
+    void changePlaceStatus_ReturnsIsUnauthorized() throws Exception {
+        String content = "{" +
+                "\"email\":\"test.email@gmail.com\"," +
+                "\"name\":\"String\"" +
+                "}";
+
+        sentPostRequest(content, "/changePlaceStatus")
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(emailService);
+    }
 }
