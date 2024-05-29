@@ -85,6 +85,15 @@ public class UserControllerWithSecurityConfigTest {
 
     @Test
     @WithMockUser(username = "testmail@gmail.com", roles = "USER")
+    void getUserByPrincipal_isForbidden() throws Exception {
+        mockMvc.perform(get(userLink))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    @WithMockUser(username = "testmail@gmail.com", roles = "USER")
     void getEmailNotificationsTest_isOk() throws Exception {
         mockMvc.perform(get(userLink + "/emailNotifications"))
                 .andExpect(status().isOk());
