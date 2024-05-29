@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.modelmapper.ModelMapper;
+import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -78,8 +80,6 @@ class UserControllerTest {
     @Mock
     private UserRepo userRepo;
     private ObjectMapper objectMapper;
-    @Mock
-    private ErrorAttributes errorAttributes;
 
     @BeforeEach
     void setup() {
@@ -87,7 +87,7 @@ class UserControllerTest {
             .standaloneSetup(userController)
             .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver(),
                 new UserArgumentResolver(userService, new ModelMapper()))
-                .setControllerAdvice(new CustomExceptionHandler(errorAttributes))
+                .setControllerAdvice(new CustomExceptionHandler(new DefaultErrorAttributes()))
             .build();
         objectMapper = new ObjectMapper();
     }
@@ -330,13 +330,6 @@ class UserControllerTest {
         doThrow(new WrongIdException(ErrorMessage.USER_NOT_FOUND_BY_ID + userId))
                 .when(userService).checkIfTheUserIsOnline(userId);
 
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("timestamp", "timestamp");
-        map.put("trace", "trace");
-        map.put("path", "path");
-        map.put("message", "message");
-        when(errorAttributes.getErrorAttributes(any(), any())).thenReturn(map);
-
         mockMvc.perform(get(userLink + "/isOnline/{userId}/", userId))
                 .andExpect(status().isNotFound());
     }
@@ -449,6 +442,13 @@ class UserControllerTest {
             .andExpect(jsonPath("$.page.length()").value(1))
             .andExpect(jsonPath("$.totalElements").value(1L))
             .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    void findUserForManagementByPage_isBadRequest() throws Exception {
+        mockMvc.perform(get(userLink + "/findUserForManagement?sort=notExist,asc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("notExist property not exist"));
     }
 
     @Test
