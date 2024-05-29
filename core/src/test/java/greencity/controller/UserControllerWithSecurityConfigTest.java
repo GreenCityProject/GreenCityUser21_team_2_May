@@ -11,6 +11,8 @@ import greencity.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -39,6 +41,7 @@ import static greencity.enums.Role.ROLE_ADMIN;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -176,12 +179,19 @@ public class UserControllerWithSecurityConfigTest {
         verifyNoInteractions(userService);
     }
 
-    @Test
-    @WithMockUser(username = "User", roles = "USER")
-    void updateUserLastActivityTimeTest_IsForbidden() throws Exception {
+    @ParameterizedTest
+    @CsvSource({
+            "User, USER",
+            "Moderator, MODERATOR",
+            "Ubs_Employee, UBS_EMPLOYEE",
+            "Employee, EMPLOYEE"
+    })
+    @WithMockUser
+    void updateUserLastActivityTimeTest_IsForbiddenForNonAdmins(String username, String role) throws Exception {
         LocalDateTime date = LocalDateTime.now();
 
-        mockMvc.perform(put(userLink + "/updateUserLastActivityTime/" + date))
+        mockMvc.perform(put(userLink + "/updateUserLastActivityTime/" + date)
+                        .with(user(username).roles(role)))
                 .andExpect(status().isForbidden());
     }
 }
