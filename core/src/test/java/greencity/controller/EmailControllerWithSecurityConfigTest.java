@@ -110,6 +110,14 @@ class EmailControllerWithSecurityConfigTest {
         verifyNoInteractions(emailService);
     }
 
+    @Test
+    @WithAnonymousUser
+    void addEcoNews_ReturnsIsUnauthorized() throws Exception {
+        sentPostRequest("{}", "/addEcoNews")
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(emailService);
+    }
+
     private ResultActions sentPostRequest(String content, String subLink) throws Exception {
         return mockMvc.perform(post(LINK + subLink)
                 .contentType(MediaType.APPLICATION_JSON)
