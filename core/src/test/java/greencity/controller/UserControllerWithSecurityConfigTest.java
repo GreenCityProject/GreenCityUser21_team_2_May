@@ -177,6 +177,14 @@ public class UserControllerWithSecurityConfigTest {
     }
 
     @Test
+    @WithMockUser(username = "testmail@mail.com", roles = "USER")
+    void findUserForManagementByPage_isForbidden() throws Exception {
+        mockMvc.perform(get(userLink + "/findUserForManagement"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(userService);
+    }
+
+    @Test
     @WithMockUser(username = "User", roles = "USER")
     void updateStatusTest_isForbidden() throws Exception {
         String content = "{\n"
