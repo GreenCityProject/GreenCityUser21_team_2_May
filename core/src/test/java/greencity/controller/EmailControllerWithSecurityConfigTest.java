@@ -129,4 +129,12 @@ class EmailControllerWithSecurityConfigTest {
 
         verifyNoInteractions(emailService);
     }
+  
+    @Test
+    @WithAnonymousUser
+    void addEcoNews_ReturnsIsUnauthorized() throws Exception {
+        sentPostRequest("{}", "/addEcoNews")
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(emailService);
+    }
 }
