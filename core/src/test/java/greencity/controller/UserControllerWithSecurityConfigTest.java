@@ -179,6 +179,50 @@ public class UserControllerWithSecurityConfigTest {
         verifyNoInteractions(userService);
     }
 
+    @Test
+    @WithMockUser(username = "testmail@mail.com", roles = "USER")
+    void findUserForManagementByPage_isForbidden() throws Exception {
+        mockMvc.perform(get(userLink + "/findUserForManagement"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    @WithMockUser(username = "User", roles = "USER")
+    void updateStatusTest_isForbidden() throws Exception {
+        String content = "{\n"
+                + "  \"id\": 0,\n"
+                + "  \"userStatus\": \"DEACTIVATED\"\n"
+                + "}";
+
+        mockMvc.perform(patch(userLink + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    @WithMockUser(username = "Admin", roles = "ADMIN")
+    void updateStatusTest_isBadRequest() throws Exception {
+        mockMvc.perform(patch(userLink + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
+  
+    @Test
+    @WithMockUser(username = "Admin", roles = "ADMIN")
+    void updateUserLastActivityTimeTest_IsOk() throws Exception {
+        LocalDateTime date = LocalDateTime.now();
+
+        mockMvc.perform(put(userLink + "/updateUserLastActivityTime/" + date))
+                .andExpect(status().isOk());
+    }
+  
     @ParameterizedTest
     @CsvSource({
             "User, USER",
