@@ -238,4 +238,13 @@ public class UserControllerWithSecurityConfigTest {
                         .with(user(username).roles(role)))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(username = "Admin", roles = "ADMIN")
+    void getUsersByFilterTest_isOk() throws Exception {
+        mockMvc.perform(post(userLink + "/filter")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"searchReg\":\"test\"}"))
+                .andExpect(status().isOk());
+    }
 }

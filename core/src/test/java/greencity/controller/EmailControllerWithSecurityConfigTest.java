@@ -3,13 +3,17 @@ package greencity.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.ModelUtils;
 import greencity.config.SecurityConfig;
+import greencity.dto.violation.UserViolationMailDto;
+import greencity.exception.exceptions.NotFoundException;
 import greencity.message.SendHabitNotification;
+import greencity.repository.UserRepo;
 import greencity.security.jwt.JwtTool;
 import greencity.service.EmailService;
 import greencity.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -137,4 +141,6 @@ class EmailControllerWithSecurityConfigTest {
                 .andExpect(status().isUnauthorized());
         verifyNoInteractions(emailService);
     }
+
+
 }

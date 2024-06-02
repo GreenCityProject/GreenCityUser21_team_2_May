@@ -161,7 +161,8 @@ public class SecurityConfig {
                                 "/email/sendReport",
                                 "/email/addEcoNews",
                                 "/email/changePlaceStatus",
-                                "/email/general/notification")
+                                "/email/general/notification",
+                                "/email/sendUserViolation")
                         .hasAnyRole(USER, ADMIN, UBS_EMPLOYEE, MODERATOR, EMPLOYEE)
                         .requestMatchers(HttpMethod.PUT,
                                 "/ownSecurity/changePassword",
