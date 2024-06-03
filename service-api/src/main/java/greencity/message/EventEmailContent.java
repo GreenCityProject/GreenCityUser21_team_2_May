@@ -1,10 +1,36 @@
 package greencity.message;
 
+import greencity.dto.event.EventStatus;
+
 import java.time.format.DateTimeFormatter;
 
 public class EventEmailContent {
 
     public static String createEmailContent(EventEmailMessage eventEmailMessage) {
+        String eventDetails;
+
+        if (eventEmailMessage.getStatus() == EventStatus.ONLINE) {
+            eventDetails = String.format(
+                    "<p><strong>Mode:</strong> Online</p>" +
+                            "<p><strong>Link:</strong> <a href='%s'>Join Event</a></p>",
+                    eventEmailMessage.getLink()
+            );
+        } else if (eventEmailMessage.getStatus() == EventStatus.OFFLINE) {
+            eventDetails = String.format(
+                    "<p><strong>Mode:</strong> Offline</p>" +
+                            "<p><strong>Location:</strong> %s</p>",
+                    eventEmailMessage.getAddress().getAddressUa()
+            );
+        } else {
+            eventDetails = String.format(
+                    "<p><strong>Mode:</strong> Online and Offline</p>" +
+                            "<p><strong>Link:</strong> <a href='%s'>Join Event</a></p>" +
+                            "<p><strong>Location:</strong> %s</p>",
+                    eventEmailMessage.getLink(),
+                    eventEmailMessage.getAddress().getAddressUa()
+            );
+        }
+
         return String.format(
                 "<html>" +
                         "<head>" +
@@ -23,13 +49,12 @@ public class EventEmailContent {
                         "<p>Dear %s,</p>" +
                         "<p>We are thrilled to inform you about your upcoming event! Here are the details:</p>" +
                         "<div class='details'>" +
+                        "<p><strong>Event Title:</strong> %s</p>" +
                         "<p><strong>Description:</strong> %s</p>" +
-                        "<p><strong>Message:</strong> %s</p>" +
-                        "<p><strong>Event Type:</strong> %s</p>" +
-                        "<p><strong>Mode:</strong> %s</p>" +
+//                        "<p><strong>Status:</strong> %s</p>" +
+                        "%s" + // eventDetails
                         "<p><strong>Start Date and Time:</strong> %s</p>" +
                         "<p><strong>End Date and Time:</strong> %s</p>" +
-                        "<p><strong>Location:</strong> %s</p>" +
                         "</div>" +
                         "<p>We are excited about the event and appreciate your efforts in making it happen. This event promises to be informative and engaging, providing great opportunities for learning and networking.</p>" +
                         "<div class='footer'>" +
@@ -41,13 +66,12 @@ public class EventEmailContent {
                         "</html>",
                 eventEmailMessage.getSubject(),
                 eventEmailMessage.getAuthor(),
+                eventEmailMessage.getEventTitle(),
                 eventEmailMessage.getDescription(),
-                eventEmailMessage.getMessage(),
-                eventEmailMessage.isOpen() ? "Open" : "Closed",
-                eventEmailMessage.isOnline() ? "Online" : "Offline",
+//                eventEmailMessage.getStatus().toString(),
+                eventDetails, // eventDetails
                 eventEmailMessage.getStartDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                eventEmailMessage.getEndDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                eventEmailMessage.getLocation()
+                eventEmailMessage.getEndDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         );
     }
 
