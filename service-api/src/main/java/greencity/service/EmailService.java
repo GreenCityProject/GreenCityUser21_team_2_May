@@ -10,6 +10,8 @@ import greencity.dto.user.PlaceAuthorDto;
 import greencity.dto.user.UserActivationDto;
 import greencity.dto.user.UserDeactivationReasonDto;
 import greencity.dto.violation.UserViolationMailDto;
+import greencity.message.EventEmailMessage;
+
 import java.util.List;
 import java.util.Map;
 
@@ -129,6 +131,15 @@ public interface EmailService {
      * @author Ann Sakhno.
      */
     void sendNotificationByEmail(NotificationDto notification, String email);
+
+    /**
+     * Method for send notification message to user by email.
+     *
+     * @param message {@link EventEmailMessage}-includes all information about
+     *                     notification.
+     * @author Roman Kasarab.
+     */
+    void sendNotificationMessageByEmail(EventEmailMessage message);
 
     /**
      * Method for send information about success restoring password.

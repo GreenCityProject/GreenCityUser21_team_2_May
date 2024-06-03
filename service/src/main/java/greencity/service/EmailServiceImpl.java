@@ -14,6 +14,8 @@ import greencity.dto.user.UserActivationDto;
 import greencity.dto.user.UserDeactivationReasonDto;
 import greencity.dto.violation.UserViolationMailDto;
 import greencity.exception.exceptions.NotFoundException;
+import greencity.message.EventEmailContent;
+import greencity.message.EventEmailMessage;
 import greencity.repository.UserRepo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -29,6 +31,7 @@ import org.thymeleaf.context.Context;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -300,6 +303,16 @@ public class EmailServiceImpl implements EmailService {
             sendEmail(email, notification.getTitle(), notification.getBody());
         } else {
             throw new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + email);
+        }
+    }
+
+    @Override
+    public void sendNotificationMessageByEmail(EventEmailMessage message) {
+        if (userRepo.findByEmail(message.getEmail()).isPresent()) {
+            String content = EventEmailContent.createEmailContent(message);
+            sendEmail(message.getEmail(), message.getSubject(), content);
+        } else {
+            throw new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + message.getEmail());
         }
     }
 
