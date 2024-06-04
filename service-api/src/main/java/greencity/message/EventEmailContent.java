@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 public class EventEmailContent {
 
-    public static String createEmailContent(EventEmailMessage eventEmailMessage) {
+    public static String createEventEmailContent(EventEmailMessage eventEmailMessage) {
         String eventDetails;
 
         if (eventEmailMessage.getStatus() == EventStatus.ONLINE) {
@@ -19,7 +19,7 @@ public class EventEmailContent {
             eventDetails = String.format(
                     "<p><strong>Mode:</strong> Offline</p>" +
                             "<p><strong>Location:</strong> %s</p>",
-                    eventEmailMessage.getAddress().getAddressUa()
+                    eventEmailMessage.getAddress().getAddressEn()
             );
         } else {
             eventDetails = String.format(
@@ -27,7 +27,7 @@ public class EventEmailContent {
                             "<p><strong>Link:</strong> <a href='%s'>Join Event</a></p>" +
                             "<p><strong>Location:</strong> %s</p>",
                     eventEmailMessage.getLink(),
-                    eventEmailMessage.getAddress().getAddressUa()
+                    eventEmailMessage.getAddress().getAddressEn()
             );
         }
 
@@ -51,10 +51,10 @@ public class EventEmailContent {
                         "<div class='details'>" +
                         "<p><strong>Event Title:</strong> %s</p>" +
                         "<p><strong>Description:</strong> %s</p>" +
-//                        "<p><strong>Status:</strong> %s</p>" +
                         "%s" + // eventDetails
                         "<p><strong>Start Date and Time:</strong> %s</p>" +
                         "<p><strong>End Date and Time:</strong> %s</p>" +
+                        "<p><strong>Link to Event:</strong> <a href='%s'>View Event</a></p>" +
                         "</div>" +
                         "<p>We are excited about the event and appreciate your efforts in making it happen. This event promises to be informative and engaging, providing great opportunities for learning and networking.</p>" +
                         "<div class='footer'>" +
@@ -68,10 +68,10 @@ public class EventEmailContent {
                 eventEmailMessage.getAuthor(),
                 eventEmailMessage.getEventTitle(),
                 eventEmailMessage.getDescription(),
-//                eventEmailMessage.getStatus().toString(),
                 eventDetails, // eventDetails
                 eventEmailMessage.getStartDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                eventEmailMessage.getEndDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                eventEmailMessage.getEndDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                eventEmailMessage.getLinkToEvent()
         );
     }
 

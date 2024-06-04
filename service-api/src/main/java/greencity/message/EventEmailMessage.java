@@ -23,4 +23,5 @@ public class EventEmailMessage {
     private ZonedDateTime startDateTime;
     private ZonedDateTime endDateTime;
     private EventAddress address;
+    private String linkToEvent;
 }
