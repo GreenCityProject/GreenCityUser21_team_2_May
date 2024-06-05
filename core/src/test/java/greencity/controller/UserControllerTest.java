@@ -434,6 +434,17 @@ class UserControllerTest {
     }
 
     @Test
+    void findById_UserNotFound_Returns404NotFound() throws Exception {
+        long nonExistentUserId = 1L;
+        when(userService.findById(nonExistentUserId)).thenReturn(null);
+
+        mockMvc.perform(get(userLink + "/findById")
+                        .param("id", String.valueOf(nonExistentUserId)))
+                .andExpect(status().isNotFound());
+    }
+
+
+    @Test
     void findUserForManagementTest() throws Exception {
         Pageable pageable = PageRequest.of(0, 20);
         when(userService.findUserForManagementByPage(pageable)).thenReturn(ModelUtils.getPageableAdvancedDto());

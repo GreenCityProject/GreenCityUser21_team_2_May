@@ -429,18 +429,24 @@ public class UserController {
     /**
      * Get {@link UserVO} by id.
      *
-     * @return {@link UserUpdateDto}.
-     * @author Orest Mamchuk
+     * @return {@link UserVO}.
+     *
+     * @autor Orest Mamchuk
      */
     @Operation(summary = "Get User by id")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
-        @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
-        @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "400", description = "Bad Request"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Not Found")
     })
     @GetMapping("/findById")
     public ResponseEntity<UserVO> findById(@RequestParam Long id) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.findById(id));
+        UserVO user = userService.findById(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
     /**
