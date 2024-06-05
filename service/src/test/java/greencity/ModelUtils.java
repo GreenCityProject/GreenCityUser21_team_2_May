@@ -3,6 +3,8 @@ package greencity;
 import greencity.constant.AppConstant;
 import greencity.dto.UbsCustomerDto;
 import greencity.dto.econews.AddEcoNewsDtoResponse;
+import greencity.dto.event.EventAddress;
+import greencity.dto.event.EventStatus;
 import greencity.dto.language.LanguageVO;
 import greencity.dto.ownsecurity.OwnSecurityVO;
 import greencity.dto.ubs.UbsProfileCreationDto;
@@ -26,10 +28,13 @@ import greencity.entity.VerifyEmail;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
 import greencity.enums.UserStatus;
+import greencity.message.EventEmailMessage;
 import greencity.security.dto.ownsecurity.OwnRestoreDto;
 import greencity.security.dto.ownsecurity.OwnSignUpDto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -211,6 +216,32 @@ public class ModelUtils {
             .id(1L)
             .name("taras")
             .build();
+    }
+
+    public static EventEmailMessage getEventEmailMessage() {
+        return EventEmailMessage.builder()
+                .email(getUserVO().getEmail())
+                .subject("You have created an event")
+                .author(getUserVO().getName())
+                .eventTitle("Title")
+                .description("Description")
+                .isOpen(true)
+                .status(EventStatus.ONLINE)
+                .link("some link")
+                .startDateTime(ZonedDateTime.of(LocalDateTime.of(2025, 11, 24, 12, 0), ZoneId.systemDefault()))
+                .endDateTime(ZonedDateTime.of(LocalDateTime.of(2025, 11, 24, 14, 0), ZoneId.systemDefault()))
+                .address(getEventAddress())
+                .linkToEvent("http://localhost:8080/events/1")
+                .build();
+    }
+
+    public static EventAddress getEventAddress() {
+        return EventAddress.builder()
+                .latitude(BigDecimal.ONE)
+                .longitude(BigDecimal.ZERO)
+                .addressEn("english address")
+                .addressUa("адреса укроїнською")
+                .build();
     }
 
     public static AddEcoNewsDtoResponse getAddEcoNewsDtoResponse() {
