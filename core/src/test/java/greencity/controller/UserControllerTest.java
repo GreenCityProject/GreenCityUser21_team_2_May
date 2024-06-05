@@ -22,6 +22,7 @@ import greencity.dto.user.UserUpdateDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
+import greencity.exception.exceptions.NotFoundException;
 import greencity.exception.exceptions.WrongIdException;
 import greencity.exception.handler.CustomExceptionHandler;
 import greencity.repository.UserRepo;
@@ -419,6 +420,18 @@ class UserControllerTest {
             .andExpect(jsonPath("$.name").value(TestConst.NAME))
             .andExpect(jsonPath("$.email").value(TestConst.EMAIL));
     }
+
+    @Test
+    void findByEmailNotFoundTest() throws Exception {
+        String invalidEmail = "invalid5467879@ex.com";
+
+        when(userService.findByEmail(invalidEmail)).thenThrow(new NotFoundException("The user with email: " + invalidEmail + " not found."));
+        mockMvc.perform(get(userLink + "/findByEmail")
+                        .param("email", invalidEmail))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("The user with email: " + invalidEmail + " not found."));
+    }
+
 
     @Test
     void findByIdTest() throws Exception {
