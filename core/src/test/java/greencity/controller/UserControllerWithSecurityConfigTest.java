@@ -2,6 +2,7 @@ package greencity.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.ModelUtils;
+import greencity.config.PageableConfig;
 import greencity.config.SecurityConfig;
 import greencity.dto.user.UserStatusDto;
 import greencity.repository.UserRepo;
@@ -17,9 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -33,11 +31,9 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import static greencity.enums.UserStatus.DEACTIVATED;
-import java.security.Principal;
-import java.time.LocalDateTime;
-import java.util.Collections;
 
-import static greencity.enums.Role.ROLE_ADMIN;
+import java.time.LocalDateTime;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
@@ -47,7 +43,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {SecurityConfig.class, UserController.class})
+@ContextConfiguration(classes = {SecurityConfig.class, UserController.class, PageableConfig.class})
 @WebAppConfiguration
 @EnableWebMvc
 @Import({JwtTool.class})
@@ -71,9 +67,6 @@ public class UserControllerWithSecurityConfigTest {
     @MockBean
     private UserRepo userRepo;
 
-    @MockBean
-    private EmailService emailService;
-
     @Autowired
     private WebApplicationContext context;
 
@@ -84,6 +77,15 @@ public class UserControllerWithSecurityConfigTest {
                 .apply(springSecurity())
                 .build();
         when(userService.findByEmail(anyString())).thenReturn(ModelUtils.getUserVO());
+    }
+
+    @Test
+    @WithMockUser(username = "testmail@gmail.com", roles = "USER")
+    void getUserByPrincipal_isForbidden() throws Exception {
+        mockMvc.perform(get(userLink))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userService);
     }
 
     @Test
@@ -115,10 +117,10 @@ public class UserControllerWithSecurityConfigTest {
     @WithAnonymousUser
     void updateUserProfilePicture_isUnauthorized() throws Exception {
         mockMvc.perform(patch(userLink + "/profilePicture")
-                .with(anonymous()))
+                        .with(anonymous()))
                 .andExpect(status().isUnauthorized());
     }
-  
+
     @Test
     @WithMockUser(username = "Admin", roles = "ADMIN")
     void checkIfTheUserIsOnline_isOk() throws Exception {
@@ -126,7 +128,7 @@ public class UserControllerWithSecurityConfigTest {
                 .andExpect(status().isOk());
         verify(userService).checkIfTheUserIsOnline(1L);
     }
-  
+
     @Test
     @WithMockUser(username = "Admin", roles = "ADMIN")
     void checkIfTheUserIsOnline_isBadRequest() throws Exception {
@@ -134,7 +136,7 @@ public class UserControllerWithSecurityConfigTest {
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(userService);
     }
-  
+
     @Test
     @WithMockUser(username = "User", roles = "USER")
     void checkIfTheUserIsOnline_isForbidden() throws Exception {
@@ -142,7 +144,7 @@ public class UserControllerWithSecurityConfigTest {
                 .andExpect(status().isForbidden());
         verifyNoInteractions(userService);
     }
-  
+
     @Test
     @WithMockUser(username = "testAdmicMail@gmail.com", roles = "ADMIN")
     void updateStatusTest_isOk() throws Exception {
@@ -213,7 +215,7 @@ public class UserControllerWithSecurityConfigTest {
 
         verifyNoInteractions(userService);
     }
-  
+
     @Test
     @WithMockUser(username = "Admin", roles = "ADMIN")
     void updateUserLastActivityTimeTest_IsOk() throws Exception {
@@ -222,7 +224,7 @@ public class UserControllerWithSecurityConfigTest {
         mockMvc.perform(put(userLink + "/updateUserLastActivityTime/" + date))
                 .andExpect(status().isOk());
     }
-  
+
     @ParameterizedTest
     @CsvSource({
             "User, USER",
@@ -237,6 +239,20 @@ public class UserControllerWithSecurityConfigTest {
         mockMvc.perform(put(userLink + "/updateUserLastActivityTime/" + date)
                         .with(user(username).roles(role)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "Admin", roles = "ADMIN")
+    void getUsersByFilterTest_isOk() throws Exception {
+        String content = "{\n"
+                + "  \"searchReg\": \"string\"\n"
+                + "}";
+
+        mockMvc.perform(post(userLink + "/filter")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content)
+                        .param("page", "0"))
+                .andExpect(status().isOk());
     }
 
     @Test
