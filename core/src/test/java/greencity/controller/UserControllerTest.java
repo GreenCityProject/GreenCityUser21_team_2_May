@@ -22,6 +22,7 @@ import greencity.dto.user.UserUpdateDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
+import greencity.exception.exceptions.NotFoundException;
 import greencity.exception.exceptions.WrongIdException;
 import greencity.exception.handler.CustomExceptionHandler;
 import greencity.repository.UserRepo;
@@ -436,13 +437,12 @@ class UserControllerTest {
     @Test
     void findById_UserNotFound_Returns404NotFound() throws Exception {
         long nonExistentUserId = 1L;
-        when(userService.findById(nonExistentUserId)).thenReturn(null);
+        when(userService.findById(nonExistentUserId)).thenThrow(new WrongIdException("user not found"));
 
         mockMvc.perform(get(userLink + "/findById")
                         .param("id", String.valueOf(nonExistentUserId)))
                 .andExpect(status().isNotFound());
     }
-
 
     @Test
     void findUserForManagementTest() throws Exception {
