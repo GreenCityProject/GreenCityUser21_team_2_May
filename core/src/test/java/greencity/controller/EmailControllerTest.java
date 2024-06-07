@@ -9,14 +9,13 @@ import greencity.dto.notification.NotificationDto;
 import greencity.dto.violation.UserViolationMailDto;
 import greencity.exception.exceptions.NotFoundException;
 import greencity.exception.handler.CustomExceptionHandler;
-import greencity.message.SendChangePlaceStatusEmailMessage;
-import greencity.message.SendHabitNotification;
-import greencity.message.SendReportEmailMessage;
+import greencity.message.*;
 import greencity.service.EmailService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,10 +27,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -327,5 +323,46 @@ class EmailControllerTest {
 
         NotificationDto notification = new ObjectMapper().readValue(content, NotificationDto.class);
         verify(emailService).sendNotificationByEmail(notification, email);
+    }
+
+    @Test
+    void sendEventNotification_ExpectedIsOk() throws Exception {
+        String content = "{\n" +
+                "  \"email\": \"example@example.com\",\n" +
+                "  \"subject\": \"Event Subject\",\n" +
+                "  \"author\": \"Event Author\",\n" +
+                "  \"eventTitle\": \"Event Title\",\n" +
+                "  \"description\": \"Event Description\",\n" +
+                "  \"isOpen\": true,\n" +
+                "  \"status\": \"ONLINE\",\n" +
+                "  \"link\": \"http://example.com/event\",\n" +
+                "  \"startDateTime\": \"2024-06-05T10:00:00Z\",\n" +
+                "  \"endDateTime\": \"2024-06-05T12:00:00Z\",\n" +
+                "  \"address\": {\n" +
+                "    \"latitude\": \"0\",\n" +
+                "    \"longitude\": \"0\",\n" +
+                "    \"addressEn\": \"En\",\n" +
+                "    \"addressUa\": \"Укр\"\n" +
+                "  },\n" +
+                "  \"linkToEvent\": \"http://example.com/link-to-event\"\n" +
+                "}";
+
+        sentPostRequest(content, "/sendEventNotification")
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<EventEmailMessage> messageCaptor = ArgumentCaptor.forClass(EventEmailMessage.class);
+        verify(emailService, times(1)).sendNotificationMessageByEmail(messageCaptor.capture());
+    }
+
+    @Test
+    void sendEventNotification_ExpectedIsBadRequest() throws Exception {
+        String content = "{\n" +
+                "  \"email\": \"example@example.com\"\n" +
+                "  \"subject\": \"Event Subject\",\n" +
+                "}";
+
+        sentPostRequest(content, "/sendEventNotification")
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(emailService);
     }
 }

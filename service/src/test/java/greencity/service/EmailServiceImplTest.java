@@ -11,14 +11,17 @@ import greencity.dto.place.PlaceNotificationDto;
 import greencity.dto.user.PlaceAuthorDto;
 import greencity.dto.user.UserActivationDto;
 import greencity.dto.user.UserDeactivationReasonDto;
+import greencity.dto.user.UserVO;
 import greencity.dto.violation.UserViolationMailDto;
 import greencity.entity.User;
 import greencity.exception.exceptions.NotFoundException;
+import greencity.message.EventEmailMessage;
 import greencity.repository.UserRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.ITemplateEngine;
@@ -245,6 +248,16 @@ class EmailServiceImplTest {
         service.sendSuccessRestorePasswordByEmail(email, lang, userName, isUbs);
 
         verify(javaMailSender).createMimeMessage();
+    }
+
+    @Test
+    void sendNotificationMessageByEmailTest() {
+        User user = User.builder().build();
+        EventEmailMessage message = ModelUtils.getEventEmailMessage();
+        when(userRepo.findByEmail(anyString())).thenReturn(Optional.of(user));
+        service.sendNotificationMessageByEmail(message);
+        verify(javaMailSender).createMimeMessage();
+
     }
 
     @Test
