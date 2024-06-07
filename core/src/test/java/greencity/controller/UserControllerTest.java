@@ -24,6 +24,7 @@ import greencity.enums.EmailNotification;
 import greencity.enums.Role;
 import greencity.exception.exceptions.WrongIdException;
 import greencity.exception.handler.CustomExceptionHandler;
+import greencity.mapping.ErrorDetailMapper;
 import greencity.repository.UserRepo;
 import greencity.service.UserService;
 import java.security.Principal;
@@ -79,6 +80,8 @@ class UserControllerTest {
     private UserService userService;
     @Mock
     private UserRepo userRepo;
+    @Mock
+    private ErrorDetailMapper errorDetailMapper;
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -87,7 +90,7 @@ class UserControllerTest {
             .standaloneSetup(userController)
             .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver(),
                 new UserArgumentResolver(userService, new ModelMapper()))
-                .setControllerAdvice(new CustomExceptionHandler(new DefaultErrorAttributes()))
+                .setControllerAdvice(new CustomExceptionHandler(new DefaultErrorAttributes(), errorDetailMapper))
             .build();
         objectMapper = new ObjectMapper();
     }

@@ -1,5 +1,9 @@
 package greencity.security.service;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
 import greencity.constant.AppConstant;
 import greencity.constant.ErrorMessage;
 import greencity.dto.user.UserAdminRegistrationDto;
@@ -13,20 +17,10 @@ import greencity.entity.VerifyEmail;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
 import greencity.enums.UserStatus;
-import greencity.exception.exceptions.BadRefreshTokenException;
-import greencity.exception.exceptions.BadUserStatusException;
-import greencity.exception.exceptions.EmailNotVerified;
-import greencity.exception.exceptions.PasswordsDoNotMatchesException;
-import greencity.exception.exceptions.UserAlreadyHasPasswordException;
-import greencity.exception.exceptions.UserAlreadyRegisteredException;
-import greencity.exception.exceptions.UserBlockedException;
-import greencity.exception.exceptions.UserDeactivatedException;
-import greencity.exception.exceptions.WrongEmailException;
-import greencity.exception.exceptions.WrongPasswordException;
+import greencity.exception.exceptions.*;
+import greencity.mapping.RegisterMapper;
 import greencity.repository.UserRepo;
-import greencity.security.dto.AccessRefreshTokensDto;
-import greencity.security.dto.SuccessSignInDto;
-import greencity.security.dto.SuccessSignUpDto;
+import greencity.security.dto.*;
 import greencity.security.dto.ownsecurity.EmployeeSignUpDto;
 import greencity.security.dto.ownsecurity.OwnSignInDto;
 import greencity.security.dto.ownsecurity.OwnSignUpDto;
@@ -38,15 +32,20 @@ import greencity.security.repository.RestorePasswordEmailRepo;
 import greencity.service.EmailService;
 import greencity.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -64,6 +63,7 @@ public class OwnSecurityServiceImpl implements OwnSecurityService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTool jwtTool;
+    @Value("${verifyEmailTimeHour}")
     private final Integer expirationTime;
     private final RestorePasswordEmailRepo restorePasswordEmailRepo;
     private final ModelMapper modelMapper;
@@ -71,20 +71,28 @@ public class OwnSecurityServiceImpl implements OwnSecurityService {
     private static final String VALID_PW_CHARS =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+{}[]|:;<>?,./";
     private final EmailService emailService;
+    private final RegisterMapper registerMapper;
+
+    private final Logger logger = LoggerFactory.getLogger(OwnSecurityServiceImpl.class);
+
+    @Value("${GOOGLE_CLIENT_ID}")
+    private final String googleClientId;
 
     /**
      * Constructor.
      */
     @Autowired
     public OwnSecurityServiceImpl(OwnSecurityRepo ownSecurityRepo,
-        UserService userService,
-        PasswordEncoder passwordEncoder,
-        JwtTool jwtTool,
-        @Value("${verifyEmailTimeHour}") Integer expirationTime,
-        RestorePasswordEmailRepo restorePasswordEmailRepo,
-        ModelMapper modelMapper,
-        UserRepo userRepo,
-        EmailService emailService) {
+                                  UserService userService,
+                                  PasswordEncoder passwordEncoder,
+                                  JwtTool jwtTool,
+                                  @Value("${verifyEmailTimeHour}") Integer expirationTime,
+                                  RestorePasswordEmailRepo restorePasswordEmailRepo,
+                                  ModelMapper modelMapper,
+                                  UserRepo userRepo,
+                                  EmailService emailService,
+                                  RegisterMapper registerMapper,
+                                  @Value("${GOOGLE_CLIENT_ID}") String googleClientId) {
         this.ownSecurityRepo = ownSecurityRepo;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
@@ -94,6 +102,8 @@ public class OwnSecurityServiceImpl implements OwnSecurityService {
         this.modelMapper = modelMapper;
         this.userRepo = userRepo;
         this.emailService = emailService;
+        this.registerMapper = registerMapper;
+        this.googleClientId = googleClientId;
     }
 
     /**
@@ -227,6 +237,75 @@ public class OwnSecurityServiceImpl implements OwnSecurityService {
         String refreshToken = jwtTool.createRefreshToken(user);
         return new SuccessSignInDto(user.getId(), accessToken, refreshToken, user.getName(), true);
     }
+
+    @Override
+    public GoogleJwtResponse signInGoogle(GoogleOAuthRequest request) throws GeneralSecurityException, IOException {
+        HttpTransport transport = new com.google.api.client.http.javanet.NetHttpTransport();
+        JsonFactory jsonFactory = com.google.api.client.json.gson.GsonFactory.getDefaultInstance();
+
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
+                .setAudience(Collections.singletonList(googleClientId))
+                .build();
+
+        logger.info("Verified google client");
+
+        GoogleIdToken idToken = verifier.verify(request.getGoogleToken());
+        if (idToken != null) {
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+
+            Optional<User> user = userRepo.findByEmail(email);
+            if (user.isPresent()) {
+                Map<String, Object> extraClaims = new HashMap<>();
+                extraClaims.put("id", user.get().getId());
+
+                UserVO userVO = userService.findByEmail(email);
+                String accessToken = jwtTool.createAccessToken(email, user.get().getRole());
+                String refreshToken = jwtTool.createRefreshToken(userVO);
+                return GoogleJwtResponse.builder()
+                        .email(email)
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .expiryDate(jwtTool.expDate(accessToken).toString())
+                        .build();
+            }
+
+            boolean emailVerified = payload.getEmailVerified();
+            SuccessSignUpDto registerRequest = registerMapper.mapGoogleTokenToSignUpDto(payload);
+            User userRequest = registerMapper.mapToEntity(registerRequest, new User());
+
+            if (emailVerified) {
+                logger.info("Registering verified(email) user");
+
+                UserVO userVORequest = registerMapper.mapToVO(userRequest);
+                userService.save(userVORequest);
+                Optional<User> userToCreateOptional = userRepo.findByEmail(email);
+                User userToCreate = userToCreateOptional.get();
+
+                Map<String, Object> extraClaims = new HashMap<>();
+                extraClaims.put("id", userToCreate.getId());
+
+                String accessToken = jwtTool.createAccessToken(email, userToCreate.getRole());
+                String refreshToken = jwtTool.createRefreshToken(registerMapper.mapToVO(userToCreate));
+                return GoogleJwtResponse.builder()
+                        .email(email)
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .expiryDate(jwtTool.expDate(accessToken).toString())
+                        .build();
+            }
+
+            signUp(registerMapper.mapGoogleTokenToOwnSignUpDto(payload), "en");
+            return GoogleJwtResponse.builder()
+                    .email(email)
+                    .build();
+
+
+        } else {
+            throw new AccessIsDeniedException("Access for user fo id=[%s] is denied", request.getGoogleToken());
+        }
+    }
+
 
     private boolean isPasswordCorrect(OwnSignInDto signInDto, UserVO user) {
         if (user.getOwnSecurity() == null) {

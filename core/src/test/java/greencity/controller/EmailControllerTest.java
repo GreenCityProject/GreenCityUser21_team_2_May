@@ -9,6 +9,7 @@ import greencity.dto.notification.NotificationDto;
 import greencity.dto.violation.UserViolationMailDto;
 import greencity.exception.exceptions.NotFoundException;
 import greencity.exception.handler.CustomExceptionHandler;
+import greencity.mapping.ErrorDetailMapper;
 import greencity.message.SendChangePlaceStatusEmailMessage;
 import greencity.message.SendHabitNotification;
 import greencity.message.SendReportEmailMessage;
@@ -52,12 +53,15 @@ class EmailControllerTest {
     @Mock
     private ErrorAttributes errorAttributes;
 
+    @Mock
+    private ErrorDetailMapper errorDetailMapper;
+
     @BeforeEach
     void setUp() {
         this.mockMvc = MockMvcBuilders
             .standaloneSetup(emailController)
             .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
-                .setControllerAdvice(new CustomExceptionHandler(errorAttributes))
+                .setControllerAdvice(new CustomExceptionHandler(errorAttributes, errorDetailMapper))
             .build();
     }
 

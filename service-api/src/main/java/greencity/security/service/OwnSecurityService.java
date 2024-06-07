@@ -2,10 +2,11 @@ package greencity.security.service;
 
 import greencity.dto.user.UserAdminRegistrationDto;
 import greencity.dto.user.UserManagementDto;
-import greencity.security.dto.AccessRefreshTokensDto;
-import greencity.security.dto.SuccessSignInDto;
-import greencity.security.dto.SuccessSignUpDto;
+import greencity.security.dto.*;
 import greencity.security.dto.ownsecurity.*;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 /**
  * Provides the interface to manage {@link OwnSecurityService} entity.
@@ -39,6 +40,16 @@ public interface OwnSecurityService {
      * @return {@link SuccessSignInDto}
      */
     SuccessSignInDto signIn(OwnSignInDto dto);
+
+    /**
+     * Method that allow you sign-in user by Google.
+     *
+     * @param request a value of {@link GoogleOAuthRequest}
+     * @return {@link GoogleJwtResponse}
+     * @throws GeneralSecurityException if something went wrong
+     * @throws IOException              if something went wrong
+     */
+    GoogleJwtResponse signInGoogle(GoogleOAuthRequest request) throws GeneralSecurityException, IOException;
 
     /**
      * Method that update your access token by refresh token.
