@@ -256,6 +256,14 @@ public class UserControllerWithSecurityConfigTest {
     }
 
     @Test
+    @WithMockUser(username = "testAdminMail@mail.com", roles = "ADMIN")
+    void findAllTest_isOk() throws Exception {
+        mockMvc.perform(get(userLink + "/findAll"))
+                .andExpect(status().isOk());
+        verify(userService).findAll();
+    }
+  
+    @Test
     void sendUserViolation_ReturnsNotFound() throws Exception {
         String content = "{\n" +
                 "\"email\": \"Test1@gmail.com\",\n" +

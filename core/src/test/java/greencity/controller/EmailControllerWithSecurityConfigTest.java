@@ -5,15 +5,18 @@ import greencity.ModelUtils;
 import greencity.config.SecurityConfig;
 import greencity.dto.violation.UserViolationMailDto;
 import greencity.exception.exceptions.NotFoundException;
+import greencity.message.EventEmailMessage;
 import greencity.message.SendHabitNotification;
-import greencity.repository.UserRepo;
 import greencity.security.jwt.JwtTool;
 import greencity.service.EmailService;
 import greencity.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.mockito.Mock;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -142,5 +145,50 @@ class EmailControllerWithSecurityConfigTest {
         verifyNoInteractions(emailService);
     }
 
+    @Test
+    @WithAnonymousUser
+    void sendEventNotification_ReturnsIsUnauthorized() throws Exception {
+        String content = "{}";
 
+        sentPostRequest(content, "/sendEventNotification")
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(emailService);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "User, USER",
+            "Moderator, MODERATOR",
+            "Ubs_Employee, UBS_EMPLOYEE",
+            "Employee, EMPLOYEE"
+    })
+    @WithMockUser
+    void sendEventNotification_ReturnsIsOk() throws Exception {
+        String content = "{\n" +
+                "  \"email\": \"email@email.com\",\n" +
+                "  \"subject\": \"Subject\",\n" +
+                "  \"author\": \"Author\",\n" +
+                "  \"eventTitle\": \"Event Title\",\n" +
+                "  \"description\": \"Event Description\",\n" +
+                "  \"isOpen\": \"true\",\n" +
+                "  \"status\": \"ONLINE\",\n" +
+                "  \"link\": \"http://event\",\n" +
+                "  \"startDateTime\": \"2024-06-05T10:00:00Z\",\n" +
+                "  \"endDateTime\": \"2024-06-05T12:00:00Z\",\n" +
+                "  \"address\": {\n" +
+                "    \"latitude\": \"0\",\n" +
+                "    \"longitude\": \"0\",\n" +
+                "    \"addressEn\": \"En\",\n" +
+                "    \"addressUa\": \"Укр\"\n" +
+                "  },\n" +
+                "  \"linkToEvent\": \"http://link-to-event\"\n" +
+                "}";
+
+        sentPostRequest(content, "/sendEventNotification")
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<EventEmailMessage> messageCaptor = ArgumentCaptor.forClass(EventEmailMessage.class);
+        verify(emailService, times(1)).sendNotificationMessageByEmail(messageCaptor.capture());
+    }
 }
