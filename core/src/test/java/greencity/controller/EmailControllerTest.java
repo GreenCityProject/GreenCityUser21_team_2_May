@@ -19,7 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.web.servlet.error.ErrorAttributes;
+import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,15 +45,12 @@ class EmailControllerTest {
     @InjectMocks
     private EmailController emailController;
 
-    @Mock
-    private ErrorAttributes errorAttributes;
-
     @BeforeEach
     void setUp() {
         this.mockMvc = MockMvcBuilders
             .standaloneSetup(emailController)
             .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
-                .setControllerAdvice(new CustomExceptionHandler(errorAttributes))
+                .setControllerAdvice(new CustomExceptionHandler((new DefaultErrorAttributes()))
             .build();
     }
 
@@ -124,21 +121,10 @@ class EmailControllerTest {
                 .when(emailService)
                 .sendCreatedNewsForAuthor(dto);
 
-        mockErrorAttributes();
-
         mockMvc.perform(post(LINK + "/addEcoNews")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isNotFound());
-    }
-
-    private void mockErrorAttributes() {
-        Map<String, Object> errorAttributesMap = new HashMap<>();
-        errorAttributesMap.put("timestamp", "timestamp");
-        errorAttributesMap.put("trace", "trace");
-        errorAttributesMap.put("path", "path");
-        errorAttributesMap.put("message", "message");
-        when(errorAttributes.getErrorAttributes(any(), any())).thenReturn(errorAttributesMap);
     }
 
     @Test
@@ -205,8 +191,6 @@ class EmailControllerTest {
                 .sendChangePlaceStatusEmail(message.getAuthorFirstName(), message.getPlaceName(),
                 message.getPlaceStatus(), message.getAuthorEmail());
 
-        mockErrorAttributes();
-
         mockMvc.perform(post(String.format("%s/%s", LINK , "/changePlaceStatus"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
@@ -268,12 +252,6 @@ class EmailControllerTest {
         String name = "String";
 
         doThrow(new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + email)).when(emailService).sendHabitNotification(name, email);
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("timestamp", "timestamp");
-        map.put("trace", "trace");
-        map.put("path", "path");
-        map.put("message", "message");
-        when(errorAttributes.getErrorAttributes(any(), any())).thenReturn(map);
 
         sentPostRequest(content, "/sendHabitNotification")
                 .andExpect(status().isNotFound());
@@ -297,6 +275,7 @@ class EmailControllerTest {
         String content = "{" +
             "\"name\":\"String\"," +
             "\"email\":\"String@gmail.com\"," +
+            "\"language\":\"en\"," +
             "\"violationDescription\":\"string string\"" +
             "}";
 
@@ -364,5 +343,20 @@ class EmailControllerTest {
         sentPostRequest(content, "/sendEventNotification")
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(emailService);
+    }
+                                     \
+    @Test
+    void sendUserViolation_ReturnsNotFound() throws Exception {
+        String content = "{\n" +
+                "\"email\": \"Test1@gmail.com\",\n" +
+                "\"language\": \"en\",\n" +
+                "\"name\": \"Test1\",\n" +
+                "\"violationDescription\": \"124125sfgg\"\n" +
+                "}";
+
+        doThrow(new NotFoundException("User not found")).when(emailService).sendUserViolationEmail(any());
+
+        sentPostRequest(content, "/sendUserViolation")
+                .andExpect(status().isNotFound());
     }
 }

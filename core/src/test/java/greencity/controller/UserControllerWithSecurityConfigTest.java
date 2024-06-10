@@ -262,4 +262,19 @@ public class UserControllerWithSecurityConfigTest {
                 .andExpect(status().isOk());
         verify(userService).findAll();
     }
+  
+    @Test
+    void sendUserViolation_ReturnsNotFound() throws Exception {
+        String content = "{\n" +
+                "\"email\": \"Test1@gmail.com\",\n" +
+                "\"language\": \"en\",\n" +
+                "\"name\": \"Test1\",\n" +
+                "\"violationDescription\": \"124125sfgg\"\n" +
+                "}";
+
+        doThrow(new NotFoundException("User not found")).when(emailService).sendUserViolationEmail(any());
+
+        sentPostRequest(content, "/sendUserViolation")
+                .andExpect(status().isNotFound());
+    }
 }
