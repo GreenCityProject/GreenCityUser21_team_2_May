@@ -254,4 +254,12 @@ public class UserControllerWithSecurityConfigTest {
                         .param("page", "0"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @WithMockUser(username = "testAdminMail@mail.com", roles = "ADMIN")
+    void findAllTest_isOk() throws Exception {
+        mockMvc.perform(get(userLink + "/findAll"))
+                .andExpect(status().isOk());
+        verify(userService).findAll();
+    }
 }
