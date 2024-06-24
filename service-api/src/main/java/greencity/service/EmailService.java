@@ -10,6 +10,7 @@ import greencity.dto.user.PlaceAuthorDto;
 import greencity.dto.user.UserActivationDto;
 import greencity.dto.user.UserDeactivationReasonDto;
 import greencity.dto.violation.UserViolationMailDto;
+import greencity.message.EventCommentMessage;
 import greencity.message.EventEmailMessage;
 
 import java.util.List;
@@ -140,6 +141,8 @@ public interface EmailService {
      * @author Roman Kasarab.
      */
     void sendNotificationMessageByEmail(EventEmailMessage message);
+
+    void sendEventCommentNotificationMessageByEmail(EventCommentMessage message);
 
     /**
      * Method for send information about success restoring password.
