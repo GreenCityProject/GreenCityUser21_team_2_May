@@ -158,6 +158,12 @@ public class EmailController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+    /**
+     * Sends notification event was commented to user on email.
+     *
+     * @param message {@link EventCommentMessage} - object with all necessary data
+     *                     for sending notification via email.
+     */
     @Operation(summary = "Send notification to user via email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),

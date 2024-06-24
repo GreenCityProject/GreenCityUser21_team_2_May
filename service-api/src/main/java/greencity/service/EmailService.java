@@ -142,6 +142,13 @@ public interface EmailService {
      */
     void sendNotificationMessageByEmail(EventEmailMessage message);
 
+    /**
+     * Method for send notification message about event was commented to user by email.
+     *
+     * @param message {@link EventCommentMessage}-includes all information about
+     *                     notification.
+     */
+
     void sendEventCommentNotificationMessageByEmail(EventCommentMessage message);
 
     /**
