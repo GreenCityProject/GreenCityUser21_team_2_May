@@ -2,6 +2,7 @@ package greencity.constant;
 
 public final class AppConstant {
     public static final String REGISTRATION_EMAIL_FIELD_NAME = "email";
+    public static final String REGISTRATION_NAME_FIELD = "name";
     public static final String ADMIN = "ADMIN";
     public static final String MODERATOR = "MODERATOR";
     public static final String USER = "USER";

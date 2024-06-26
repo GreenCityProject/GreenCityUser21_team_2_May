@@ -35,6 +35,14 @@ public interface UserRepo extends JpaRepository<User, Long>, JpaSpecificationExe
     Optional<User> findByEmail(String email);
 
     /**
+     * Find {@link User} by name.
+     *
+     * @param name user name.
+     * @return {@link User}
+     */
+    Optional<User> findByName(String name);
+
+    /**
      * Find {@link User} by page.
      *
      * @param pageable pageable configuration.
