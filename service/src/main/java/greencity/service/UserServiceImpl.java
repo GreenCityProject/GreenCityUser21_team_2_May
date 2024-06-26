@@ -71,6 +71,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserVO save(UserVO userVO) {
         User user = modelMapper.map(userVO, User.class);
+        if (userRepo.findByName(userVO.getName()).isPresent()) {
+            throw new UserAlreadyExistByNameException(ErrorMessage.USER_ALREADY_REGISTERED_WITH_THIS_NAME + userVO.getName());
+        }
         return modelMapper.map(userRepo.save(user), UserVO.class);
     }
 
@@ -141,6 +144,9 @@ public class UserServiceImpl implements UserService {
      * @author Vasyl Zhovnir
      */
     private void updateUserFromDto(UserManagementUpdateDto dto, User user) {
+        if (!user.getName().equals(dto.getName())) {
+            throw new UserNameCanNotBeChangedException(ErrorMessage.USER_NAME_CAN_NOT_BE_CHANGED);
+        }
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
@@ -386,6 +392,9 @@ public class UserServiceImpl implements UserService {
         User user = userRepo
             .findByEmail(email)
             .orElseThrow(() -> new WrongEmailException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + email));
+        if (!user.getName().equals(dto.getName())) {
+            throw new UserNameCanNotBeChangedException(ErrorMessage.USER_NAME_CAN_NOT_BE_CHANGED);
+        }
         user.setName(dto.getName());
         user.setEmailNotification(dto.getEmailNotification());
         userRepo.save(user);
@@ -525,6 +534,9 @@ public class UserServiceImpl implements UserService {
         User user = userRepo
             .findByEmail(email)
             .orElseThrow(() -> new WrongEmailException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + email));
+        if (!user.getName().equals(userProfileDtoRequest.getName())) {
+            throw new UserNameCanNotBeChangedException(ErrorMessage.USER_NAME_CAN_NOT_BE_CHANGED);
+        }
         user.setName(userProfileDtoRequest.getName());
         user.setCity(userProfileDtoRequest.getCity());
         user.setUserCredo(userProfileDtoRequest.getUserCredo());

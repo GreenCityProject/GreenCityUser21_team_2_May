@@ -302,6 +302,9 @@ public class OwnSecurityServiceImpl implements OwnSecurityService {
         if (userRepo.findByEmail(dto.getEmail()).isPresent()) {
             throw new UserAlreadyRegisteredException(ErrorMessage.USER_ALREADY_REGISTERED_WITH_THIS_EMAIL);
         }
+        if (userRepo.findByName(dto.getName()).isPresent()) {
+            throw new UserAlreadyExistByNameException(ErrorMessage.USER_ALREADY_REGISTERED_WITH_THIS_NAME + dto.getName());
+        }
         User user = managementCreateNewRegisteredUser(dto, jwtTool.generateTokenKey());
         OwnSecurity ownSecurity = managementCreateOwnSecurity(user);
         user.setOwnSecurity(ownSecurity);

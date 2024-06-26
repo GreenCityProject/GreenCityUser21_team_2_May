@@ -200,6 +200,21 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
+     * Method intercept exception {@link UserNameCanNotBeChangedException}.
+     *
+     * @param ex Exception witch should be intercepted.
+     * @return ResponseEntity witch contain http status and body with message of
+     *         exception.
+     */
+    @ExceptionHandler(UserNameCanNotBeChangedException.class)
+    public final ResponseEntity<Object> handleChangeNameException(UserNameCanNotBeChangedException ex) {
+        ValidationExceptionDto validationExceptionDto =
+                new ValidationExceptionDto(AppConstant.REGISTRATION_NAME_FIELD, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Collections.singletonList(validationExceptionDto));
+    }
+
+    /**
      * Method intercept exception {@link BadSocialNetworkLinksException}.
      *
      * @param ex      Exception witch should be intercepted.
