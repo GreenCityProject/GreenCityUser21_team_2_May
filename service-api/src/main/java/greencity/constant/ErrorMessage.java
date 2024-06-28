@@ -19,6 +19,8 @@ public final class ErrorMessage {
     public static final String REFRESH_TOKEN_NOT_VALID = "Refresh token not valid!";
     public static final String BAD_PASSWORD = "Bad password";
     public static final String USER_ALREADY_REGISTERED_WITH_THIS_EMAIL = "User with this email is already registered";
+
+    public static final String USER_ALREADY_REGISTERED_WITH_THIS_NAME = "User with this name is already registered ";
     public static final String PASSWORDS_DO_NOT_MATCH = "The passwords don't match";
     public static final String PASSWORD_DOES_NOT_MATCH = "The password doesn't match";
     public static final String SELECT_CORRECT_LANGUAGE = "Select correct language: 'en', 'ua' or 'ru'";
@@ -30,7 +32,7 @@ public final class ErrorMessage {
     public static final String USER_BLOCKED = "User is blocked";
     public static final String USER_CREATED = "User is not activated";
     public static final String USER_EMAIL_IS_NOT_VERIFIED = "The user's email address has not been verified.";
-
+    public static final String USER_NAME_CAN_NOT_BE_CHANGED = "Name can not be changed";
     public static final String INCORRECT_PASSWORD = "Incorrect password";
 
     private ErrorMessage() {

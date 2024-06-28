@@ -13,16 +13,7 @@ import greencity.entity.VerifyEmail;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
 import greencity.enums.UserStatus;
-import greencity.exception.exceptions.BadRefreshTokenException;
-import greencity.exception.exceptions.BadUserStatusException;
-import greencity.exception.exceptions.EmailNotVerified;
-import greencity.exception.exceptions.PasswordsDoNotMatchesException;
-import greencity.exception.exceptions.UserAlreadyHasPasswordException;
-import greencity.exception.exceptions.UserAlreadyRegisteredException;
-import greencity.exception.exceptions.UserBlockedException;
-import greencity.exception.exceptions.UserDeactivatedException;
-import greencity.exception.exceptions.WrongEmailException;
-import greencity.exception.exceptions.WrongPasswordException;
+import greencity.exception.exceptions.*;
 import greencity.repository.UserRepo;
 import greencity.security.dto.AccessRefreshTokensDto;
 import greencity.security.dto.SuccessSignInDto;
@@ -102,6 +93,10 @@ public class OwnSecurityServiceImpl implements OwnSecurityService {
     @Transactional
     @Override
     public SuccessSignUpDto signUp(OwnSignUpDto dto, String language) {
+        User nameAlreadyExist = userRepo.findByName(dto.getName()).orElse(null);
+        if (nameAlreadyExist != null) {
+            throw new UserAlreadyExistByNameException(ErrorMessage.USER_ALREADY_REGISTERED_WITH_THIS_NAME + dto.getName());
+        }
         User user = createNewRegisteredUser(dto, jwtTool.generateTokenKey(), language);
         setUsersFields(dto, user);
         user.setVerifyEmail(createVerifyEmail(user, jwtTool.generateTokenKey()));
@@ -306,6 +301,9 @@ public class OwnSecurityServiceImpl implements OwnSecurityService {
     public UserAdminRegistrationDto managementRegisterUser(UserManagementDto dto) {
         if (userRepo.findByEmail(dto.getEmail()).isPresent()) {
             throw new UserAlreadyRegisteredException(ErrorMessage.USER_ALREADY_REGISTERED_WITH_THIS_EMAIL);
+        }
+        if (userRepo.findByName(dto.getName()).isPresent()) {
+            throw new UserAlreadyExistByNameException(ErrorMessage.USER_ALREADY_REGISTERED_WITH_THIS_NAME + dto.getName());
         }
         User user = managementCreateNewRegisteredUser(dto, jwtTool.generateTokenKey());
         OwnSecurity ownSecurity = managementCreateOwnSecurity(user);
